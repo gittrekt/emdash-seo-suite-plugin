@@ -62,7 +62,7 @@ export function buildHealthPage(opts: {
 				{ type: "button", action_id: "refresh_health", label: "Refresh", style: "primary" },
 			],
 		},
-		{ type: "context", text: "Scans up to 40 published entries per tracked collection." },
+		{ type: "context", text: "Scans up to 100 published entries per tracked collection. Larger sites may need multiple refreshes or future pagination." },
 	];
 
 	if (opts.scanned === 0) {
