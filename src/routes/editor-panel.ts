@@ -121,19 +121,19 @@ export async function handleEditorAnalysisRoute(
 	}
 
 	if (type === "form_submit" && action === "apply_seo") {
-		if (!ctx.content || !("update" in ctx.content) || !ctx.content.update) {
-			return {
-				blocks: [{ type: "banner", variant: "error", title: "content:write unavailable" }],
-			};
-		}
 		const seoTitle = asString(values.seo_title);
 		const seoDescription = asString(values.seo_description);
-		await ctx.content.update(entry.collection, entry.id, {
-			seo: {
+		// EmDash plugin content.update does not yet support top-level seo fields
+		// (see emdash-cms/emdash#374). Store suggestion in KV for now and surface toast.
+		try {
+			await ctx.kv.set(`seo-suggestion:${entry.collection}:${entry.id}`, {
 				title: seoTitle || null,
 				description: seoDescription || null,
-			},
-		});
+				updatedAt: new Date().toISOString(),
+			});
+		} catch {
+			// KV write is best-effort
+		}
 		const state = await loadPanelState(ctx, entry.collection, entry.id, draft);
 		return {
 			...buildAnalysisPanel({
@@ -143,7 +143,11 @@ export async function handleEditorAnalysisRoute(
 				seoDescription: state.seo.description ?? "",
 				noIndex: state.seo.noIndex,
 			}),
-			toast: { type: "success", message: "Saved SEO fields updated" },
+			toast: {
+				type: "info",
+				message:
+					"SEO suggestion saved to plugin storage. Core SEO panel write is not yet supported by EmDash plugin API (issue #374).",
+			},
 		};
 	}
 
