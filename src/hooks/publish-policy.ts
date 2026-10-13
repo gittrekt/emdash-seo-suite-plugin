@@ -40,9 +40,6 @@ export async function handleBeforePublish(
 		return;
 	}
 
-	if (!hasDescription) {
-		return { cancel: true, reason };
-	}
-
-	ctx.log.warn(reason, { collection: event.collection, id });
+	// block mode: cancel on any critical problem (description or focus keyphrase)
+	return { cancel: true, reason };
 }
