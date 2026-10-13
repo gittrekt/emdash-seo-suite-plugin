@@ -47,7 +47,7 @@ function interactionValue(input: unknown): Record<string, unknown> {
 
 async function listRedirectRows(ctx: PluginContext) {
 	if (!ctx.redirects?.list || !ctx.redirects.get) return [];
-	const listed = await ctx.redirects.list({ limit: 50 });
+	const listed = await ctx.redirects.list({ limit: 100 });
 	const rows = [];
 	for (const redirect of listed.items) {
 		const versioned = await ctx.redirects.get(redirect.id);
@@ -86,7 +86,7 @@ async function scanHealth(ctx: PluginContext, settings: SiteSeoSettings) {
 		if (!ctx.content?.list) continue;
 		try {
 			const page = await ctx.content.list(collection, {
-				limit: 40,
+				limit: 100,
 				where: { status: "published" },
 			});
 			for (const item of page.items) {
@@ -170,10 +170,18 @@ export async function handleAdminRoute(
 				if (!ctx.redirects || !("create" in ctx.redirects) || !ctx.redirects.create) {
 					throw new Error("redirects:write is unavailable");
 				}
+				const source = asString(values.source).trim();
+				const destination = asString(values.destination).trim();
+				if (!source.startsWith("/") || source.includes("://")) {
+					throw new Error("Source must be a relative path starting with /");
+				}
+				if (source === destination) {
+					throw new Error("Source and destination cannot be the same");
+				}
 				const typeValue = Number(asString(values.type) || "301") as 301 | 302 | 307 | 308;
 				await ctx.redirects.create({
-					source: asString(values.source),
-					destination: asString(values.destination),
+					source,
+					destination,
 					type: typeValue,
 					enabled: true,
 				});
