@@ -60,6 +60,15 @@ export function buildPageMetadata(input: JsonLdPageInput): PageMetadataContribut
 	const contributions: PageMetadataContribution[] = [];
 	const siteName = settings.organizationName || page.siteName || "Site";
 
+	function safeOrigin(url: string | null | undefined): string | undefined {
+		if (!url) return undefined;
+		try {
+			return new URL("/", url).origin;
+		} catch {
+			return undefined;
+		}
+	}
+
 	contributions.push({
 		kind: "jsonld",
 		id: "seo-suite:website",
@@ -67,7 +76,7 @@ export function buildPageMetadata(input: JsonLdPageInput): PageMetadataContribut
 			"@context": "https://schema.org",
 			"@type": "WebSite",
 			name: siteName,
-			url: page.url ? new URL("/", page.url).origin : undefined,
+			url: safeOrigin(page.url),
 		},
 	});
 
@@ -79,7 +88,7 @@ export function buildPageMetadata(input: JsonLdPageInput): PageMetadataContribut
 				"@context": "https://schema.org",
 				"@type": "Organization",
 				name: settings.organizationName,
-				url: page.url ? new URL("/", page.url).origin : undefined,
+				url: safeOrigin(page.url),
 			},
 		});
 	}
